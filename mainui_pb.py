@@ -43,7 +43,7 @@ class ProgressBar_Dialog(object):
     # setupUi
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
+        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"ADB File Manager", None))
         self.progressbar_label.setText(QCoreApplication.translate("Dialog", u"TextLabel", None))
     # retranslateUi
 

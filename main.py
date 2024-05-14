@@ -1,12 +1,41 @@
-#made by Akansh; WIP rn; to do- make a progressbar, clean code, make a proper readme
+#made by Akansh
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (QApplication, QMainWindow, QDialog)
+from PySide6.QtCore import QThread, Signal
 from mainui import Ui_MainWindow
 from mainui_dialog import Ui_Dialog
 from mainui_pb import ProgressBar_Dialog
 import sys
 import subprocess
 import os
+
+class Subprocess_cmd(QThread):
+    finished = Signal()
+
+    def __init__(self, aop="", fop="", cp_cmd="", del_cmd=""):
+        super().__init__()
+        self.adb_operation = aop #adb operations like pull or push
+        self.file_operation = fop #file operations like cut, copy or delete
+        self.copy_cmd = cp_cmd
+        self.del_cmd = del_cmd
+
+    def run(self):
+        if self.adb_operation != "":
+            copy_cmd = subprocess.Popen(self.copy_cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+            while copy_cmd.poll() is None:
+                QApplication.processEvents()
+                print(self.adb_operation)
+            if self.file_operation == "Cut":
+                del_cmd = subprocess.Popen(self.del_cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+                while del_cmd.poll() is None:
+                    QApplication.processEvents()
+                    print(self.file_operation)
+        else:
+            if self.file_operation == "delete":
+                del_cmd = subprocess.Popen(self.del_cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+                while del_cmd.poll() is None:
+                    QApplication.processEvents()
+                    print(self.file_operation)
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -54,7 +83,6 @@ class MainWindow(QMainWindow):
                 ui.devices_list.addItem(a[i])
 
         def select_device(item):
-            #print(item.text())
             self.selected_device = item.text().split()[0]
             print(self.selected_device)
             device_chooser.close()
@@ -200,14 +228,18 @@ class MainWindow(QMainWindow):
         else:
             self.paste_main_fun(sender)
 
-    def show_pb_dialog(self):
-        pb = QDialog()
+    def show_pb_dialog(self, info):
+        self.pb = QDialog()
         ui = ProgressBar_Dialog()
-        ui.setupUi(pb)
+        ui.setupUi(self.pb)
         ui.progressBar.setRange(0, 0)
         ui.progressBar.setTextVisible(False)
-        pb.show()
-        pb.exec()
+        ui.progressbar_label.setText(info)
+        self.pb.show()
+
+    def subprocesscmd_finished(self):
+        self.fill_computer_list(self.path)
+        self.fill_adb_list(self.adb_path)
 
     def paste_main_fun(self, s):
         print("check", s)
@@ -230,15 +262,22 @@ class MainWindow(QMainWindow):
             print(f"copying {self.whattocutcopy} to { self.wheretocutcopy}")
             #pull
 
-            pulling = subprocess.Popen(f"adb -s {self.selected_device} pull \"{self.whattocutcopy}\" {self.wheretocutcopy}", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip()
-            self.fill_computer_list(self.path)
-            print(pulling.split())
+            pulling = f"adb -s {self.selected_device} pull \"{self.whattocutcopy}\" {self.wheretocutcopy}"
 
             if txt == "Cut":
-                print(f"deleting {self.whattocutcopy}")
-                print(subprocess.Popen(f"adb -s {self.selected_device} shell rm -rf \"\'{self.whattocutcopy}\'\"", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip())
-                self.fill_adb_list(self.adb_path)
-            print("done")
+                delete = f"adb -s {self.selected_device} shell rm -rf \"\'{self.whattocutcopy}\'\""
+                info = f"Moving {self.whattocutcopy.split("/")[-1]} to { self.wheretocutcopy}"
+            else:
+                delete = ""
+                info = f"Copying {self.whattocutcopy.split("/")[-1]} to { self.wheretocutcopy}"
+
+            self.show_pb_dialog(info)
+
+            self.thread1 = Subprocess_cmd("pulling", txt, pulling, delete)
+            self.thread1.finished.connect(self.pb.close)
+            self.thread1.finished.connect(self.subprocesscmd_finished)
+            self.thread1.start()
+
             self.whattocutcopy = None
             self.wheretocutcopy = None
             s.setText(txt)
@@ -252,21 +291,27 @@ class MainWindow(QMainWindow):
             print(f"copying {self.whattocutcopy} to { self.wheretocutcopy}")
             #push
 
-            pushing = subprocess.Popen(f"adb -s {self.selected_device} push \"{self.whattocutcopy}\" {self.wheretocutcopy}", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip()
-            self.fill_adb_list(self.adb_path)
-            print(pushing.split())
+            pushing = f"adb -s {self.selected_device} push \"{self.whattocutcopy}\" {self.wheretocutcopy}"
 
             if txt == "Cut":
-                print(f"deleting {self.whattocutcopy}")
+                info = f"Moving {self.whattocutcopy} to { self.wheretocutcopy}"
                 if self.os_name == "win":
                     print(f"deleting {self.whattocutcopy}")
-                    print(subprocess.Popen(f"del \/F \/Q \"{self.whattocutcopy}\"", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip())
+                    delete = ["del", "/F", "/Q", self.whattocutcopy]
                 elif self.os_name == "linux":
                     print(f"deleting {self.whattocutcopy}")
-                    print(subprocess.Popen(f"rm -rf \"{self.whattocutcopy}\"", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip())
-                self.fill_computer_list(self.path)
+                    delete = f"rm -rf \"{self.whattocutcopy}\""
+            else:
+                info = f"Copying {self.whattocutcopy} to { self.wheretocutcopy}"
+                delete = ""
 
-            print("done")
+            self.show_pb_dialog(info)
+
+            self.thread1 = Subprocess_cmd("pushing", txt, pushing, delete)
+            self.thread1.finished.connect(self.pb.close)
+            self.thread1.finished.connect(self.subprocesscmd_finished)
+            self.thread1.start()
+
             self.whattocutcopy = ""
             self.wheretocutcopy = ""
             s.setText(txt)
@@ -277,27 +322,47 @@ class MainWindow(QMainWindow):
             if self.os_name == "win":
                 self.what_to_delete = self.path.replace("\r", "") + "\\" + str(self.ui.computer_list.currentItem().text().replace("\r", ""))
                 print(f"deleting {self.what_to_delete}")
-                print(subprocess.Popen(f"del \/F \/Q \"{self.what_to_delete}\"", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip())
+                info = f"Deleting {self.what_to_delete.split("\\")[-1]}"
+
+                delete = ["del", "/F", "/Q", self.what_to_delete]
             elif self.os_name == "linux":
                 self.what_to_delete = self.path.replace("\r", "") + "/" + str(self.ui.computer_list.currentItem().text().replace("\r", ""))
                 print(f"deleting {self.what_to_delete}")
-                print(subprocess.Popen(f"rm -rf \"{self.what_to_delete}\"", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip())
-            self.fill_computer_list(self.path)
+                info = f"Deleting {self.what_to_delete.split("/")[-1]}"
+                
+                delete = f"rm -rf \"{self.what_to_delete}\""
+
+            self.show_pb_dialog(info)
+
+            self.thread1 = Subprocess_cmd(fop="delete", del_cmd=delete)
+            self.thread1.finished.connect(self.pb.close)
+            self.thread1.finished.connect(self.subprocesscmd_finished)
+            self.thread1.start()
         else:
             self.what_to_delete = self.adb_path.replace("\r", "") + "/" +  str(self.ui.adb_list.currentItem().text().replace("\r", ""))
             print(f"deleting {self.what_to_delete}")
-            print(subprocess.Popen(f"adb -s {self.selected_device} shell rm -rf \"\'{self.what_to_delete}\'\"", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip())
-            self.fill_adb_list(self.adb_path)
+            info = f"Deleting {self.what_to_delete.split("/")[-1]}"
+           
+            delete = f"adb -s {self.selected_device} shell rm -rf \"\'{self.what_to_delete}\'\""
+
+            self.show_pb_dialog(info)
+
+            self.thread1 = Subprocess_cmd(fop="delete", del_cmd=delete)
+            self.thread1.finished.connect(self.pb.close)
+            self.thread1.finished.connect(self.subprocesscmd_finished)
+            self.thread1.start()
 
     def new_path_entered(self):
         if self.current_index == 0:
             print(self.ui.currentloc_lineedit.text())
             self.path = self.ui.currentloc_lineedit.text()
             self.fill_computer_list(self.path)
+            self.pathlist.append(self.path.replace("\r", ""))
         else:
             print(self.ui.currentloc_lineedit.text())
             self.adb_path = self.ui.currentloc_lineedit.text()
             self.fill_adb_list(self.adb_path)
+            self.pathlist_adb.append(self.adb_path.replace("\r", ""))
 
     def fill_computer_list(self, thepath):
         print(thepath)
@@ -355,7 +420,7 @@ class MainWindow(QMainWindow):
     def fill_adb_list(self, theadb_path):
         self.ui.adb_list.clear()
         self.ui.adb_list.addItems(subprocess.Popen(f"adb -s {self.selected_device} shell ls \"\'{theadb_path}\'\"", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip().split("\n"))
-#no longer needed
+#no longer needed vvv
     def tab_changed(self, index):
         if index == 0:
             self.fill_computer_list(self.path)

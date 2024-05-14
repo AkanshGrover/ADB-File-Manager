@@ -57,7 +57,7 @@ class Ui_Dialog(object):
     # setupUi
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
+        Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"ADB File Manager", None))
         self.ndevices_label.setText(QCoreApplication.translate("Dialog", u"devices connected", None))
         self.label1.setText(QCoreApplication.translate("Dialog", u"Please select one device from the list below:", None))
         self.refresh_btn.setText(QCoreApplication.translate("Dialog", u"Refresh", None))
