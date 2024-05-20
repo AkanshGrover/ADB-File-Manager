@@ -1,10 +1,11 @@
 #made by Akansh
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (QApplication, QMainWindow, QDialog)
+from PySide6.QtWidgets import (QApplication, QMainWindow, QDialog, QMessageBox)
 from PySide6.QtCore import QThread, Signal
 from mainui import Ui_MainWindow
 from mainui_dialog import Ui_Dialog
 from mainui_pb import ProgressBar_Dialog
+from mainui_folderdialog import Folder_Dialog
 import sys
 import subprocess
 import os
@@ -45,6 +46,7 @@ class MainWindow(QMainWindow):
 
         self.ui.back_btn.clicked.connect(self.back_btn_func)
         self.ui.forward_btn.clicked.connect(self.forward_btn_func)
+        self.ui.newfolder_btn.clicked.connect(self.create_new_folder)
         self.ui.copy_btn.clicked.connect(self.copy_cut_fun)
         self.ui.cut_btn.clicked.connect(self.copy_cut_fun)
         self.ui.delete_btn.clicked.connect(self.delete_btn_func)
@@ -200,6 +202,33 @@ class MainWindow(QMainWindow):
             if p != basep:
                 self.ui.back_btn.setEnabled(True)
             return p, backlist, forwardlist
+        
+
+    def create_new_folder(self):
+        def make_folder():
+            fname = ui.nfolder_name.text().replace("\r", "")
+            if fname != "":
+                if self.current_index == 0:
+                    if self.os_name == "win":
+                        folderpath = self.path.replace("\r", "") + "\\" + fname
+                    elif self.os_name == "linux":
+                        folderpath = self.path.replace("\r", "") + "/" + fname
+                    subprocess.Popen(f"mkdir \"{folderpath}\"", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+                    self.fill_computer_list(self.path)
+                else:
+                    folderpath = self.adb_path.replace("\r", "") + "/" + fname
+                    subprocess.Popen(f"adb shell mkdir \"{folderpath}\"", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+                    self.fill_adb_list(self.adb_path)
+            else:
+                QMessageBox.warning(self, "Warning", "Folder name can't be empty")
+
+        fd = QDialog()
+        ui = Folder_Dialog()
+        ui.setupUi(fd)
+        ui.label.setFont(QFont('Segoe Ui', 11))
+        ui.buttonBox.accepted.connect(make_folder)
+        fd.show()
+        fd.exec()
         
 
     def copy_cut_fun(self):

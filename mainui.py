@@ -22,7 +22,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.back_btn = QPushButton(self.centralwidget)
         self.back_btn.setObjectName(u"back_btn")
-        sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.back_btn.sizePolicy().hasHeightForWidth())
@@ -37,7 +37,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.forward_btn)
 
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout.addItem(self.horizontalSpacer_2)
 
@@ -46,9 +46,14 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.currentloc_lineedit)
 
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout.addItem(self.horizontalSpacer)
+
+        self.newfolder_btn = QPushButton(self.centralwidget)
+        self.newfolder_btn.setObjectName(u"newfolder_btn")
+
+        self.horizontalLayout.addWidget(self.newfolder_btn)
 
         self.copy_btn = QPushButton(self.centralwidget)
         self.copy_btn.setObjectName(u"copy_btn")
@@ -108,6 +113,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"ADB File Manager", None))
         self.back_btn.setText(QCoreApplication.translate("MainWindow", u"<", None))
         self.forward_btn.setText(QCoreApplication.translate("MainWindow", u">", None))
+        self.newfolder_btn.setText(QCoreApplication.translate("MainWindow", u"New Folder", None))
         self.copy_btn.setText(QCoreApplication.translate("MainWindow", u"Copy", None))
         self.cut_btn.setText(QCoreApplication.translate("MainWindow", u"Cut", None))
         self.delete_btn.setText(QCoreApplication.translate("MainWindow", u"Delete", None))
