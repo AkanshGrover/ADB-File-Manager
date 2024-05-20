@@ -38,6 +38,7 @@ class Subprocess_cmd(QThread):
                     QApplication.processEvents()
                     print(self.file_operation)
 
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -71,13 +72,13 @@ class MainWindow(QMainWindow):
             print("closed")
             sys.exit()
 
+
     def init_win_dialog(self, n):
         def refresh_list():
             subprocess.Popen("adb kill-server", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip().split("\n")
             a = subprocess.Popen("adb devices", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip().split("\n")
             ui.devices_list.clear()
             if len(a) == 2:
-                print("only one device")
                 ui.ndevices_label.setText(f"{len(a)-1} device connected")
             else:
                 ui.ndevices_label.setText(f"{len(a)-1} devices connected")
@@ -86,7 +87,6 @@ class MainWindow(QMainWindow):
 
         def select_device(item):
             self.selected_device = item.text().split()[0]
-            print(self.selected_device)
             device_chooser.close()
             self.main_start()
 
@@ -107,23 +107,19 @@ class MainWindow(QMainWindow):
         device_chooser.show()
         device_chooser.exec()
 
+
     def start_app_stuff(self):
         self.check_os()
         self.adb_path = "/sdcard"
         a = subprocess.Popen("adb devices", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip().split("\n")
         if len(a) == 2:
-            print("only one device")
             self.selected_device = a[1].split()[0]
-            print(self.selected_device)
             self.main_start()
         elif len(a) > 2:
-            print("more than one")
             self.init_win_dialog(a)
         elif len(a) < 2:
-            print("no device connected")
             self.init_win_dialog(a)
-            #print(subprocess.Popen("adb kill-server", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip())
-            #sys.exit()
+
 
     def main_start(self):
         if self.ui.tabWidget.currentIndex() == 0:
@@ -137,6 +133,7 @@ class MainWindow(QMainWindow):
             self.ui.back_btn.setEnabled(False)
             self.current_index = 0
             self.base_path_adb = "/sdcard"
+
 
     def check_os(self):
         ps = sys.platform
@@ -155,48 +152,41 @@ class MainWindow(QMainWindow):
         else:
             self.os_name = "not-supported"
 
+
     def back_btn_func(self):
-        print("back btn clicked")
         if self.current_index == 0:
-            print("backlsit in back", self.pathlist)
             self.path, self.pathlist, self.forwardpath = self.back_main(self.path, self.pathlist, self.forwardpath, self.fill_computer_list)
         elif self.current_index == 1:
             self.adb_path, self.pathlist_adb, self.forwardpath_adb = self.back_main(self.adb_path, self.pathlist_adb, self.forwardpath_adb, self.fill_adb_list)
 
+
     def back_main(self, p, backlist, forwardlist, listname):
-        print("main back")
         if len(backlist) > 1:
-            print("back", backlist)
             forwardlist.append(backlist[-1])
             backlist.pop()
             p = backlist[-1]
             listname(p)
             self.ui.currentloc_lineedit.setText(p)
             self.ui.forward_btn.setEnabled(True)
-            print("back", backlist)
             if len(backlist) == 1:
                 self.ui.back_btn.setEnabled(False)
             return p, backlist, forwardlist
 
+
     def forward_btn_func(self):
-        print("forward btn clicked")
         if self.current_index == 0:
-            print("backlsit", self.pathlist)
             self.path, self.pathlist, self.forwardpath = self.forward_main(self.path, self.pathlist, self.forwardpath, self.fill_computer_list, self.base_path)
         elif self.current_index == 1:
-            print("backlsit adb", self.pathlist_adb)
             self.adb_path, self.pathlist_adb, self.forwardpath_adb = self.forward_main(self.adb_path, self.pathlist_adb, self.forwardpath_adb, self.fill_adb_list, self.base_path_adb)
 
+
     def forward_main(self, p, backlist, forwardlist, listname, basep):
-        print("main forward")
         if len(forwardlist) > 0:
-            print("forward", forwardlist)
             p = forwardlist[-1]
             backlist.append(forwardlist[-1])
             forwardlist.pop()
             listname(p)
             self.ui.currentloc_lineedit.setText(p)
-            print("forward", forwardlist)
             if len(forwardlist) == 0:
                 self.ui.forward_btn.setEnabled(False)
             if p != basep:
@@ -244,18 +234,17 @@ class MainWindow(QMainWindow):
                     self.whattocutcopy = self.path.replace("\r", "") + "\\" + str(self.ui.computer_list.currentItem().text().replace("\r", ""))
                 elif self.os_name == "linux":
                     self.whattocutcopy = self.path + "/" + str(self.ui.computer_list.currentItem().text())
-                print(self.whattocutcopy)
                 self.ui.tabWidget.setCurrentIndex(1)
-                self.tab_changed(1)
+                self.tab_changed_new(1)
                 buttonname.setText("Paste")
             else:
                 self.whattocutcopy = self.adb_path.replace("\r", "") + "/" + str(self.ui.adb_list.currentItem().text().replace("\r", ""))
-                print(self.whattocutcopy)
                 self.ui.tabWidget.setCurrentIndex(0)
-                self.tab_changed(0)
+                self.tab_changed_new(0)
                 buttonname.setText("Paste")
         else:
             self.paste_main_fun(sender)
+
 
     def show_pb_dialog(self, info):
         self.pb = QDialog()
@@ -266,13 +255,13 @@ class MainWindow(QMainWindow):
         ui.progressbar_label.setText(info)
         self.pb.show()
 
+
     def subprocesscmd_finished(self):
         self.fill_computer_list(self.path)
         self.fill_adb_list(self.adb_path)
 
+
     def paste_main_fun(self, s):
-        print("check", s)
-        print(s.objectName())
         if s.objectName() == "copy_btn":
             txt = "Copy"
         elif s.objectName() == "cut_btn":
@@ -287,9 +276,6 @@ class MainWindow(QMainWindow):
                 self.wheretocutcopy =  self.path.replace("\r", "") + "\\" + temp
             elif self.os_name == "linux":
                 self.wheretocutcopy =  self.path.replace("\r", "") + "/" + temp
-            print(self.wheretocutcopy)
-            print(f"copying {self.whattocutcopy} to { self.wheretocutcopy}")
-            #pull
 
             pulling = f"adb -s {self.selected_device} pull \"{self.whattocutcopy}\" {self.wheretocutcopy}"
 
@@ -316,19 +302,17 @@ class MainWindow(QMainWindow):
             else:
                 temp = ""
             self.wheretocutcopy = self.adb_path.replace("\r", "") + "/" + temp
-            print(self.wheretocutcopy)
-            print(f"copying {self.whattocutcopy} to { self.wheretocutcopy}")
-            #push
 
-            pushing = f"adb -s {self.selected_device} push \"{self.whattocutcopy}\" {self.wheretocutcopy}"
+            pushing = f"adb -s {self.selected_device} push \"{self.whattocutcopy}\" \"{self.wheretocutcopy}\""
 
             if txt == "Cut":
                 info = f"Moving {self.whattocutcopy} to { self.wheretocutcopy}"
                 if self.os_name == "win":
-                    print(f"deleting {self.whattocutcopy}")
-                    delete = ["del", "/F", "/Q", self.whattocutcopy]
+                    if os.path.isdir(self.whattocutcopy):
+                        delete = ["rmdir", "/S", "/Q", self.whattocutcopy]
+                    elif os.path.isfile(self.whattocutcopy):
+                        delete = ["del", "/F", "/Q", self.whattocutcopy]
                 elif self.os_name == "linux":
-                    print(f"deleting {self.whattocutcopy}")
                     delete = f"rm -rf \"{self.whattocutcopy}\""
             else:
                 info = f"Copying {self.whattocutcopy} to { self.wheretocutcopy}"
@@ -350,7 +334,6 @@ class MainWindow(QMainWindow):
         if self.current_index == 0:
             if self.os_name == "win":
                 self.what_to_delete = self.path.replace("\r", "") + "\\" + str(self.ui.computer_list.currentItem().text().replace("\r", ""))
-                print(f"deleting {self.what_to_delete}")
                 info = f"Deleting {self.what_to_delete.split("\\")[-1]}"
 
                 if os.path.isdir(self.what_to_delete):
@@ -361,55 +344,43 @@ class MainWindow(QMainWindow):
                     print("file not there")
             elif self.os_name == "linux":
                 self.what_to_delete = self.path.replace("\r", "") + "/" + str(self.ui.computer_list.currentItem().text().replace("\r", ""))
-                print(f"deleting {self.what_to_delete}")
                 info = f"Deleting {self.what_to_delete.split("/")[-1]}"
                 
                 delete = f"rm -rf \"{self.what_to_delete}\""
-
-            self.show_pb_dialog(info)
-
-            self.thread1 = Subprocess_cmd(fop="delete", del_cmd=delete)
-            self.thread1.finished.connect(self.pb.close)
-            self.thread1.finished.connect(self.subprocesscmd_finished)
-            self.thread1.start()
         else:
             self.what_to_delete = self.adb_path.replace("\r", "") + "/" +  str(self.ui.adb_list.currentItem().text().replace("\r", ""))
-            print(f"deleting {self.what_to_delete}")
             info = f"Deleting {self.what_to_delete.split("/")[-1]}"
            
             delete = f"adb -s {self.selected_device} shell rm -rf \"\'{self.what_to_delete}\'\""
 
+        if delete != "" and self.what_to_delete != "":
             self.show_pb_dialog(info)
-
             self.thread1 = Subprocess_cmd(fop="delete", del_cmd=delete)
             self.thread1.finished.connect(self.pb.close)
             self.thread1.finished.connect(self.subprocesscmd_finished)
             self.thread1.start()
 
+
     def new_path_entered(self):
         if self.current_index == 0:
-            print(self.ui.currentloc_lineedit.text())
             self.path = self.ui.currentloc_lineedit.text()
             self.fill_computer_list(self.path)
             self.pathlist.append(self.path.replace("\r", ""))
         else:
-            print(self.ui.currentloc_lineedit.text())
             self.adb_path = self.ui.currentloc_lineedit.text()
             self.fill_adb_list(self.adb_path)
             self.pathlist_adb.append(self.adb_path.replace("\r", ""))
 
+
     def fill_computer_list(self, thepath):
-        print(thepath)
         self.ui.computer_list.clear()
         self.ui.computer_list.addItems(subprocess.Popen(f"dir \"{thepath}\" /b", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8", errors="replace").strip().split("\n"))
-# check below code
+
+
     def open_f_func(self, item):
-        print("text", item.text())
         if self.current_index == 0:
             if self.os_name == "win":
-                #self.path = self.path.replace("\r", "") + "\\" + item.text()
                 t = self.path.replace("\r", "") + "\\" + item.text().replace("\r", "")
-                print("t", t)
             elif self.os_name == "linux":
                 t = self.path.replace("\r", "") + "/" + item.text().replace("\r", "")
             
@@ -432,9 +403,7 @@ class MainWindow(QMainWindow):
             if len(self.forwardpath) == 0:
                 self.ui.forward_btn.setEnabled(False)
         elif self.current_index == 1:
-            #self.adb_path = self.adb_path.replace("\r", "") + "/" + item.text().replace("\r", "")
             t = self.adb_path.replace("\r", "") + "/" + item.text().replace("\r", "")
-            print("here", t)
             if subprocess.Popen(f"adb -s {self.selected_device} shell ls \"\'{t}\'\"", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip() != t:
                 print("folder")
                 self.adb_path = t
@@ -451,38 +420,12 @@ class MainWindow(QMainWindow):
             if len(self.forwardpath_adb) == 0:
                 self.ui.forward_btn.setEnabled(False)
 
+
     def fill_adb_list(self, theadb_path):
         self.ui.adb_list.clear()
         self.ui.adb_list.addItems(subprocess.Popen(f"adb -s {self.selected_device} shell ls \"\'{theadb_path}\'\"", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip().split("\n"))
-#no longer needed vvv
-    def tab_changed(self, index):
-        if index == 0:
-            self.fill_computer_list(self.path)
-            self.current_index = 0
-            if len(self.forwardpath) >= 1:
-                self.ui.forward_btn.setEnabled(True)
-            else:
-                self.ui.forward_btn.setEnabled(False)
-            if len(self.pathlist) > 1:
-                self.ui.back_btn.setEnabled(True)
-            else:
-                self.ui.back_btn.setEnabled(False)
-            self.ui.currentloc_lineedit.setText(self.path)
-        elif index == 1:
-            self.fill_adb_list(self.adb_path)
-            self.current_index = 1
-            if len(self.forwardpath_adb) >= 1:
-                self.ui.forward_btn.setEnabled(True)
-            else:
-                self.ui.forward_btn.setEnabled(False)
-            if len(self.pathlist_adb) > 1:
-                self.ui.back_btn.setEnabled(True)
-            else:
-                self.ui.back_btn.setEnabled(False)
-            self.ui.currentloc_lineedit.setText(self.adb_path)
-        else:
-            print("eror")
-#^^^^ delete after check
+
+
     def tab_changed_new(self, index):
         if index == 0:
             self.current_index = 0
@@ -513,6 +456,7 @@ class MainWindow(QMainWindow):
         print("closing")
         print(subprocess.Popen("adb kill-server", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip())
         print("closed")
+
 
 if __name__ == "__main__":
     sys.argv += ['-platform', 'windows:darkmode=2']
