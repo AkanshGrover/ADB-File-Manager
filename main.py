@@ -353,7 +353,12 @@ class MainWindow(QMainWindow):
                 print(f"deleting {self.what_to_delete}")
                 info = f"Deleting {self.what_to_delete.split("\\")[-1]}"
 
-                delete = ["del", "/F", "/Q", self.what_to_delete]
+                if os.path.isdir(self.what_to_delete):
+                    delete = ["rmdir", "/S", "/Q", self.what_to_delete]
+                elif os.path.isfile(self.what_to_delete):
+                    delete = ["del", "/F", "/Q", self.what_to_delete]
+                else:
+                    print("file not there")
             elif self.os_name == "linux":
                 self.what_to_delete = self.path.replace("\r", "") + "/" + str(self.ui.computer_list.currentItem().text().replace("\r", ""))
                 print(f"deleting {self.what_to_delete}")
