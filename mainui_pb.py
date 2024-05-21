@@ -7,12 +7,16 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QDialog, QLabel, QProgressBar,
     QSizePolicy, QSpacerItem, QVBoxLayout, QWidget)
+import os
 
 class ProgressBar_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
         Dialog.resize(453, 114)
+        basedir = os.path.dirname(__file__)
+        icon = QIcon(os.path.join(basedir, 'icons', 'alticon.png'))
+        Dialog.setWindowIcon(icon)
         self.verticalLayout = QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.progressbar_label = QLabel(Dialog)
