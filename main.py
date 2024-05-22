@@ -68,15 +68,15 @@ class MainWindow(QMainWindow):
             print(self.selected_device)
         except AttributeError:
             print("closing")
-            print(subprocess.Popen("adb kill-server", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip())
+            print(subprocess.Popen(f"{self.adb_exec} kill-server", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip())
             print("closed")
             sys.exit()
 
 
     def init_win_dialog(self, n):
         def refresh_list():
-            subprocess.Popen("adb kill-server", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip().split("\n")
-            a = subprocess.Popen("adb devices", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip().split("\n")
+            subprocess.Popen(f"{self.adb_exec} kill-server", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip().split("\n")
+            a = subprocess.Popen(f"{self.adb_exec} devices", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip().split("\n")
             ui.devices_list.clear()
             if len(a) == 2:
                 ui.ndevices_label.setText(f"{len(a)-1} device connected")
@@ -110,8 +110,15 @@ class MainWindow(QMainWindow):
 
     def start_app_stuff(self):
         self.check_os()
+        basedir = os.path.dirname(__file__)
+        if self.os_name == "win":
+            self.adb_exec = os.path.join(basedir, "windows-adb", "adb.exe ")
+        elif self.os_name == "linux":
+            self.adb_exec = "./" + os.path.join(basedir, "linux-adb", "adb ")
+        else:
+            print("OS not supported")
         self.adb_path = "/sdcard"
-        a = subprocess.Popen("adb devices", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip().split("\n")
+        a = subprocess.Popen(f"{self.adb_exec} devices", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip().split("\n")
         if len(a) == 2:
             self.selected_device = a[1].split()[0]
             self.main_start()
@@ -207,7 +214,7 @@ class MainWindow(QMainWindow):
                     self.fill_computer_list(self.path)
                 else:
                     folderpath = self.adb_path.replace("\r", "") + "/" + fname
-                    subprocess.Popen(f"adb shell mkdir \"{folderpath}\"", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+                    subprocess.Popen(f"{self.adb_exec} shell mkdir \"{folderpath}\"", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
                     self.fill_adb_list(self.adb_path)
             else:
                 QMessageBox.warning(self, "Warning", "Folder name can't be empty")
@@ -277,10 +284,10 @@ class MainWindow(QMainWindow):
             elif self.os_name == "linux":
                 self.wheretocutcopy =  self.path.replace("\r", "") + "/" + temp
 
-            pulling = f"adb -s {self.selected_device} pull \"{self.whattocutcopy}\" {self.wheretocutcopy}"
+            pulling = f"{self.adb_exec} -s {self.selected_device} pull \"{self.whattocutcopy}\" {self.wheretocutcopy}"
 
             if txt == "Cut":
-                delete = f"adb -s {self.selected_device} shell rm -rf \"\'{self.whattocutcopy}\'\""
+                delete = f"{self.adb_exec} -s {self.selected_device} shell rm -rf \"\'{self.whattocutcopy}\'\""
                 info = f"Moving {self.whattocutcopy.split("/")[-1]} to { self.wheretocutcopy}"
             else:
                 delete = ""
@@ -303,7 +310,7 @@ class MainWindow(QMainWindow):
                 temp = ""
             self.wheretocutcopy = self.adb_path.replace("\r", "") + "/" + temp
 
-            pushing = f"adb -s {self.selected_device} push \"{self.whattocutcopy}\" \"{self.wheretocutcopy}\""
+            pushing = f"{self.adb_exec} -s {self.selected_device} push \"{self.whattocutcopy}\" \"{self.wheretocutcopy}\""
 
             if txt == "Cut":
                 info = f"Moving {self.whattocutcopy} to { self.wheretocutcopy}"
@@ -351,7 +358,7 @@ class MainWindow(QMainWindow):
             self.what_to_delete = self.adb_path.replace("\r", "") + "/" +  str(self.ui.adb_list.currentItem().text().replace("\r", ""))
             info = f"Deleting {self.what_to_delete.split("/")[-1]}"
            
-            delete = f"adb -s {self.selected_device} shell rm -rf \"\'{self.what_to_delete}\'\""
+            delete = f"{self.adb_exec} -s {self.selected_device} shell rm -rf \"\'{self.what_to_delete}\'\""
 
         if delete != "" and self.what_to_delete != "":
             self.show_pb_dialog(info)
@@ -404,7 +411,7 @@ class MainWindow(QMainWindow):
                 self.ui.forward_btn.setEnabled(False)
         elif self.current_index == 1:
             t = self.adb_path.replace("\r", "") + "/" + item.text().replace("\r", "")
-            if subprocess.Popen(f"adb -s {self.selected_device} shell ls \"\'{t}\'\"", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip() != t:
+            if subprocess.Popen(f"{self.adb_exec} -s {self.selected_device} shell ls \"\'{t}\'\"", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip() != t:
                 print("folder")
                 self.adb_path = t
                 self.fill_adb_list(self.adb_path)
@@ -423,7 +430,7 @@ class MainWindow(QMainWindow):
 
     def fill_adb_list(self, theadb_path):
         self.ui.adb_list.clear()
-        self.ui.adb_list.addItems(subprocess.Popen(f"adb -s {self.selected_device} shell ls \"\'{theadb_path}\'\"", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip().split("\n"))
+        self.ui.adb_list.addItems(subprocess.Popen(f"{self.adb_exec} -s {self.selected_device} shell ls \"\'{theadb_path}\'\"", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip().split("\n"))
 
 
     def tab_changed_new(self, index):
@@ -454,7 +461,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         print("closing")
-        print(subprocess.Popen("adb kill-server", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip())
+        print(subprocess.Popen(f"{self.adb_exec} kill-server", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip())
         print("closed")
 
 
