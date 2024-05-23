@@ -57,10 +57,13 @@ class MainWindow(QMainWindow):
         self.ui.tabWidget.currentChanged.connect(self.tab_changed_new)
 
         self.ui.computer_list.itemActivated.connect(self.open_f_func)
-        self.ui.computer_list.setFont(QFont('Segoe Ui', 11))
+        self.font = QFont()
+        self.font.setPointSize(11)
+
+        self.ui.computer_list.setFont(self.font)
 
         self.ui.adb_list.itemActivated.connect(self.open_f_func)
-        self.ui.adb_list.setFont(QFont('Segoe Ui', 11))
+        self.ui.adb_list.setFont(self.font)
 
         self.start_app_stuff()
 
@@ -98,7 +101,7 @@ class MainWindow(QMainWindow):
         ui = Ui_Dialog()
         ui.setupUi(device_chooser)
         ui.ndevices_label.setText(f"{len(n)-1} devices connected")
-        ui.devices_list.setFont(QFont('Segoe Ui', 11))
+        ui.devices_list.setFont(self.font)
         ui.refresh_btn.clicked.connect(refresh_list)
         ui.devices_list.itemActivated.connect(select_device)
         ui.exit_app_btn.clicked.connect(exit_app)
@@ -113,8 +116,11 @@ class MainWindow(QMainWindow):
         basedir = os.path.dirname(__file__)
         if self.os_name == "win":
             self.adb_exec = os.path.join(basedir, "windows-adb", "adb.exe ")
+            import darkdetect
+            if not darkdetect.isDark():
+                app.setStyle("WindowsVista")
         elif self.os_name == "linux":
-            self.adb_exec = "./" + os.path.join(basedir, "linux-adb", "adb ")
+            self.adb_exec = "adb"
         else:
             print("OS not supported")
         self.adb_path = "/sdcard"
@@ -222,7 +228,7 @@ class MainWindow(QMainWindow):
         fd = QDialog()
         ui = Folder_Dialog()
         ui.setupUi(fd)
-        ui.label.setFont(QFont('Segoe Ui', 11))
+        ui.label.setFont(self.font)
         ui.buttonBox.accepted.connect(make_folder)
         fd.show()
         fd.exec()
@@ -381,7 +387,10 @@ class MainWindow(QMainWindow):
 
     def fill_computer_list(self, thepath):
         self.ui.computer_list.clear()
-        self.ui.computer_list.addItems(subprocess.Popen(f"dir \"{thepath}\" /b", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8", errors="replace").strip().split("\n"))
+        if self.os_name == "win":
+            self.ui.computer_list.addItems(subprocess.Popen(f"dir \"{thepath}\" /b", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8", errors="replace").strip().split("\n"))
+        elif self.os_name == "linux":
+            self.ui.computer_list.addItems(subprocess.Popen(f"ls \"{thepath}\"", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8", errors="replace").strip().split("\n"))
 
 
     def open_f_func(self, item):
@@ -466,7 +475,6 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == "__main__":
-    sys.argv += ['-platform', 'windows:darkmode=2']
     app = QApplication(sys.argv)
     app.setStyle('Fusion')
 
