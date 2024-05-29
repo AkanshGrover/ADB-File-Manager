@@ -1,11 +1,12 @@
 #made by Akansh
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (QApplication, QMainWindow, QDialog, QMessageBox)
+from PySide6.QtGui import QFont, QIcon
+from PySide6.QtWidgets import (QApplication, QMainWindow, QDialog, QMessageBox, QInputDialog)
 from PySide6.QtCore import QThread, Signal
 from mainui import Ui_MainWindow
 from mainui_dialog import Ui_Dialog
 from mainui_pb import ProgressBar_Dialog
 from mainui_folderdialog import Folder_Dialog
+from mainuiwadb_dialog import Ui_Wadb_Dialog
 import sys
 import subprocess
 import os
@@ -93,6 +94,73 @@ class MainWindow(QMainWindow):
             device_chooser.close()
             self.main_start()
 
+        def show_dialog(title, text, btn):
+            a = QMessageBox()
+            a.setWindowTitle(title)
+            a.setText(text)
+            a.setWindowIcon(self.icon)
+            if btn == "ok":
+                a.setStandardButtons(QMessageBox.Ok)
+                a.setIcon(QMessageBox.Information)
+            elif btn == "yes":
+                a.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+                a.setIcon(QMessageBox.Question)
+            button = a.exec()
+            return button
+        
+        def pair_or_connect():
+            a = show_dialog("ADB File Manager", "Have you ever previously paired your Android device with this device on the same Wi-Fi network?", "yes")
+            if a == QMessageBox.Yes:
+                connect_device()
+            else:
+                use_wadb()
+
+        def connect_device():
+            QMessageBox.information(self, "How to use Wireless debugging", "Enter IP Address and Port mentioned in the main page in the next window.")
+            ip_port, ok = QInputDialog.getText(self, "ADB File Manager", "Enter IP address and port:                                                  ")
+            if ok and ip_port:
+                op = subprocess.Popen([self.adb_exec, "connect", ip_port.strip()], shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip().split(" ")
+                if "connected" in op:
+                    self.selected_device = op[-1]
+                    device_chooser.close()
+                    self.main_start()
+                else:
+                    QMessageBox.critical(self, "Error", "Could not connect")
+                    connect_device()
+            elif not ok:
+                pass
+            else:
+                QMessageBox.critical(self, "Error", "Data not entered!")
+                connect_device()
+
+        def use_wadb():
+            def pair_connect_device():
+                ip = ui.ipa_input.text().strip()
+                pin = ui.pin_input.text().strip().encode("utf-8")
+                #pair device
+                if ip != "" and pin != "":
+                    a = subprocess.Popen([self.adb_exec, "pair", ip], shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+                    stdout_data, stderr_data = a.communicate(pin + b"\n")
+                    #connect device
+                    if "Successfully" in stdout_data.decode("utf-8").strip().split(" "):
+                        QMessageBox.information(self, "How to use Wireless debugging", "Successfully paired device.")
+                        connect_device()
+                    else:
+                        QMessageBox.critical(self, "Error", "Pairing unsuccessful")
+                else:
+                    QMessageBox.critical(self, "Error", "Data not entered!")
+                    use_wadb()
+
+            QMessageBox.information(self, "How to use Wireless debugging", "Enable Wireless debugging on your device. Then select \"Pair device with pairing code.\" Enter IP Address and pairing code in the next window.")
+            wadb_win = QDialog()
+            ui = Ui_Wadb_Dialog()
+            ui.setupUi(wadb_win)
+            ui.label.setFont(self.font)
+            ui.label_2.setFont(self.font)
+            ui.buttonBox.accepted.connect(pair_connect_device)
+            wadb_win.show()
+            wadb_win.exec()
+
         def exit_app():
             self.closeEvent(None)
             sys.exit()
@@ -104,6 +172,7 @@ class MainWindow(QMainWindow):
         ui.devices_list.setFont(self.font)
         ui.refresh_btn.clicked.connect(refresh_list)
         ui.devices_list.itemActivated.connect(select_device)
+        ui.wirelessadb_btn.clicked.connect(pair_or_connect)
         ui.exit_app_btn.clicked.connect(exit_app)
         for i in range(1, len(n)):
             ui.devices_list.addItem(n[i])
@@ -114,6 +183,7 @@ class MainWindow(QMainWindow):
     def start_app_stuff(self):
         self.check_os()
         basedir = os.path.dirname(__file__)
+        self.icon = QIcon(os.path.join(basedir, 'icons', 'alticon.png'))
         if self.os_name == "win":
             self.adb_exec = os.path.join(basedir, "windows-adb", "adb.exe ")
             import darkdetect
@@ -126,8 +196,11 @@ class MainWindow(QMainWindow):
         self.adb_path = "/sdcard"
         a = subprocess.Popen(f"{self.adb_exec} devices", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE).stdout.read().decode("utf-8").strip().split("\n")
         if len(a) == 2:
-            self.selected_device = a[1].split()[0]
-            self.main_start()
+            if a[1].replace("\t", " ").split(" ")[1] != "unauthorized":
+                self.selected_device = a[1].split()[0]
+                self.main_start()
+            else:
+                self.init_win_dialog(a)
         elif len(a) > 2:
             self.init_win_dialog(a)
         elif len(a) < 2:

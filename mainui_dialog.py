@@ -14,7 +14,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(311, 436)
+        Dialog.resize(334, 436)
         basedir = os.path.dirname(__file__)
         icon = QIcon(os.path.join(basedir, 'icons', 'alticon.png'))
         Dialog.setWindowIcon(icon)
@@ -49,6 +49,11 @@ class Ui_Dialog(object):
 
         self.verticalLayout.addWidget(self.devices_list)
 
+        self.wirelessadb_btn = QPushButton(Dialog)
+        self.wirelessadb_btn.setObjectName(u"wirelessadb_btn")
+
+        self.verticalLayout.addWidget(self.wirelessadb_btn)
+
         self.exit_app_btn = QPushButton(Dialog)
         self.exit_app_btn.setObjectName(u"exit_app_btn")
 
@@ -65,6 +70,7 @@ class Ui_Dialog(object):
         self.ndevices_label.setText(QCoreApplication.translate("Dialog", u"devices connected", None))
         self.label1.setText(QCoreApplication.translate("Dialog", u"Please select one device from the list below:", None))
         self.refresh_btn.setText(QCoreApplication.translate("Dialog", u"Refresh", None))
+        self.wirelessadb_btn.setText(QCoreApplication.translate("Dialog", u"Connect via wireless ADB", None))
         self.exit_app_btn.setText(QCoreApplication.translate("Dialog", u"Exit app", None))
     # retranslateUi
 
