@@ -16,7 +16,7 @@ class Ui_Wadb_Dialog(object):
             Wadb_Dialog.setObjectName(u"Wadb_Dialog")
         Wadb_Dialog.resize(400, 102)
         basedir = os.path.dirname(__file__)
-        icon = QIcon(os.path.join(basedir, 'icons', 'alticon.png'))
+        icon = QIcon(os.path.join(basedir, 'icons', 'alticon-adb-fm.png'))
         Wadb_Dialog.setWindowIcon(icon)
         Wadb_Dialog.setMaximumSize(QSize(800, 150))
         self.horizontalLayout_2 = QHBoxLayout(Wadb_Dialog)

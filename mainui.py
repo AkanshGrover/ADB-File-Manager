@@ -16,7 +16,7 @@ class Ui_MainWindow(object):
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.resize(794, 501)
         basedir = os.path.dirname(__file__)
-        icon = QIcon(os.path.join(basedir, 'icons', 'alticon.png'))
+        icon = QIcon(os.path.join(basedir, 'icons', 'alticon-adb-fm.png'))
         MainWindow.setWindowIcon(icon)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")

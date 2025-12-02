@@ -183,7 +183,7 @@ class MainWindow(QMainWindow):
     def start_app_stuff(self):
         self.check_os()
         basedir = os.path.dirname(__file__)
-        self.icon = QIcon(os.path.join(basedir, 'icons', 'alticon.png'))
+        self.icon = QIcon(os.path.join(basedir, 'icons', 'alticon-adb-fm.png'))
         if self.os_name == "win":
             self.adb_exec = os.path.join(basedir, "windows-adb", "adb.exe ")
             import darkdetect
@@ -367,10 +367,10 @@ class MainWindow(QMainWindow):
 
             if txt == "Cut":
                 delete = f"{self.adb_exec} -s {self.selected_device} shell rm -rf \"\'{self.whattocutcopy}\'\""
-                info = f"Moving {self.whattocutcopy.split("/")[-1]} to { self.wheretocutcopy}"
+                info = f"Moving {self.whattocutcopy.split('/')[-1]} to { self.wheretocutcopy}"
             else:
                 delete = ""
-                info = f"Copying {self.whattocutcopy.split("/")[-1]} to { self.wheretocutcopy}"
+                info = f"Copying {self.whattocutcopy.split('/')[-1]} to { self.wheretocutcopy}"
 
             self.show_pb_dialog(info)
 
@@ -420,7 +420,8 @@ class MainWindow(QMainWindow):
         if self.current_index == 0:
             if self.os_name == "win":
                 self.what_to_delete = self.path.replace("\r", "") + "\\" + str(self.ui.computer_list.currentItem().text().replace("\r", ""))
-                info = f"Deleting {self.what_to_delete.split("\\")[-1]}"
+                t = self.what_to_delete.split("\\")[-1]
+                info = f"Deleting {t}"
 
                 if os.path.isdir(self.what_to_delete):
                     delete = ["rmdir", "/S", "/Q", self.what_to_delete]
@@ -430,12 +431,12 @@ class MainWindow(QMainWindow):
                     print("file not there")
             elif self.os_name == "linux":
                 self.what_to_delete = self.path.replace("\r", "") + "/" + str(self.ui.computer_list.currentItem().text().replace("\r", ""))
-                info = f"Deleting {self.what_to_delete.split("/")[-1]}"
+                info = f"Deleting {self.what_to_delete.split('/')[-1]}"
                 
                 delete = f"rm -rf \"{self.what_to_delete}\""
         else:
             self.what_to_delete = self.adb_path.replace("\r", "") + "/" +  str(self.ui.adb_list.currentItem().text().replace("\r", ""))
-            info = f"Deleting {self.what_to_delete.split("/")[-1]}"
+            info = f"Deleting {self.what_to_delete.split('/')[-1]}"
            
             delete = f"{self.adb_exec} -s {self.selected_device} shell rm -rf \"\'{self.what_to_delete}\'\""
 

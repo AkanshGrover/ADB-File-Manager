@@ -16,7 +16,7 @@ class Ui_Dialog(object):
             Dialog.setObjectName(u"Dialog")
         Dialog.resize(334, 436)
         basedir = os.path.dirname(__file__)
-        icon = QIcon(os.path.join(basedir, 'icons', 'alticon.png'))
+        icon = QIcon(os.path.join(basedir, 'icons', 'alticon-adb-fm.png'))
         Dialog.setWindowIcon(icon)
         self.verticalLayout = QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName(u"verticalLayout")

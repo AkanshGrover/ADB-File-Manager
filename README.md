@@ -17,7 +17,7 @@ Ever felt that copying files via MTP on Android was slow or caused issues? Intro
 **Linux:**
 
  1. Download the compressed zip file from the [releases](https://github.com/AkanshGrover/ADB-File-Manager/releases) and unzip it.
- 2. Run `linux_installer.sh` once as root to install the app. After
+ 2. Run `linux_installer.sh` once as user to install the app. After
     installation, just run the app and connect your USB debugging
     enabled Android device to the computer.
 
@@ -57,7 +57,7 @@ python -m nuitka --onefile --windows-icon-from-ico=icons/alticon.ico  --include-
 
 ```sh
 
-python -m PyInstaller --onefile --windowed --add-data="icons/alticon.png:."  --add-data="icons:."  --name="adb-fm"  main.py  --clean
+python3 -m PyInstaller --onefile --windowed --add-data="icons:icons" --name="adb-fm" main.py --clean
 
 ```
 
